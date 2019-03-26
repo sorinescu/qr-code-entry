@@ -6,6 +6,8 @@ import uuid
 import qrcode
 
 from flask import request, jsonify, make_response
+from PIL import Image
+
 from .db import AccessKey, db
 
 
@@ -80,10 +82,29 @@ def check_access_key(key):
 
 
 def get_key_qr_code(key):
-    img = qrcode.make(key)
+    qr = qrcode.QRCode(error_correction=qrcode.ERROR_CORRECT_H, box_size=10)
+
+    # logo = Image.open('logo-transp.png')
+    logo = Image.open('logo.jpg')
+
+    qr.add_data(key)
+    # qr_img = qr.make_image(back_color='transparent')
+    qr_img = qr.make_image(fill_color='#010101')
+
+    qr_w, qr_h = qr_img.size
+
+    logo = logo.resize((qr_w // 4, qr_h // 4), resample=Image.LANCZOS)
+
+    if False:
+        logo_big = Image.new('RGB', size=(qr_w, qr_h))
+        logo_big.paste(logo, box=(qr_w // 3, qr_h // 3))
+
+        qr_img = Image.alpha_composite(qr_img, logo_big)
+    else:
+        qr_img.paste(logo, box=(qr_w * 3 // 8, qr_h * 3 // 8))
 
     with BytesIO() as f:
-        img.save(f)
+        qr_img.save(f, format='png')
         resp = make_response(f.getvalue())
 
     resp.headers.set('Content-Type', 'image/png')
