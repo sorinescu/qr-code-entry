@@ -1,0 +1,4 @@
+SECRET_KEY: foo
+API_TOKEN: bar
+SQLALCHEMY_DATABASE_URI: sqlite:///access-keys.db
+

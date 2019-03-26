@@ -1,0 +1,66 @@
+plugins {
+  id 'com.github.johnrengelman.shadow' version '5.0.0'
+  id 'java'
+  id 'maven'
+  id 'application'
+}
+
+group = 'com.github.sorinescu'
+// mainClassName = 'com.github.sorinescu.jpiqr.WebcamQRCodeExample'
+// mainClassName = 'com.github.sorinescu.jpiqr.ExampleDetectQrCode'
+mainClassName = 'com.github.sorinescu.jpiqr.ExampleDetectQrCodeConsole'
+version = '0.0.1'
+
+sourceCompatibility = 1.8 // java 8
+targetCompatibility = 1.8
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  // implementation 'com.google.guava:guava:18.0'
+  implementation 'com.github.sarxos:webcam-capture:0.3.12'
+  implementation 'com.github.sarxos:webcam-capture-driver-v4l4j:0.3.12'
+  implementation 'org.boofcv:boofcv-core:0.33'
+  implementation 'org.boofcv:boofcv-recognition:0.33'
+  implementation 'org.boofcv:boofcv-swing:0.33'
+  implementation 'org.boofcv:boofcv-WebcamCapture:0.33'
+  implementation 'com.google.zxing:javase:3.3.3'
+  implementation 'com.squareup.okhttp3:okhttp:3.14.0'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+// To specify a license in the pom:
+install {
+  repositories.mavenInstaller {
+    pom.project {
+      licenses {
+        license {
+          name 'The Apache Software License, Version 2.0'
+          url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          distribution 'repo'
+        }
+      }
+    }
+  }
+}
+
+wrapper {
+    gradleVersion = "5.1.1"
+    distributionType = Wrapper.DistributionType.ALL
+}

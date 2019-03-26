@@ -1,0 +1,74 @@
+plugins {
+  id 'com.github.johnrengelman.shadow' version '5.0.0'
+  id 'java'
+  id 'maven'
+  id 'application'
+}
+
+group = 'com.github.sorinescu.piqr'
+mainClassName = 'com.github.sorinescu.piqr.PiQRController'
+version = '0.0.1'
+
+sourceCompatibility = 1.8 // java 8
+targetCompatibility = 1.8
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  // implementation 'com.google.guava:guava:18.0'
+  implementation 'com.beust:jcommander:1.72'
+  implementation 'com.github.sarxos:webcam-capture:0.3.12'
+  implementation 'com.github.sarxos:webcam-capture-driver-v4l4j:0.3.12'
+  implementation 'com.pi4j:pi4j-core:1.2'
+  implementation 'com.pi4j:pi4j-gpio-extension:1.2'
+  // implementation 'com.squareup.okhttp3:okhttp:3.14.0'
+  implementation 'com.squareup.okhttp3:okhttp:3.4.2'
+  // implementation 'com.squareup.okhttp:okhttp:2.7.2'
+  implementation 'org.boofcv:boofcv-core:0.33'
+  implementation 'org.boofcv:boofcv-recognition:0.33'
+  implementation 'org.boofcv:boofcv-swing:0.33'
+  implementation 'org.boofcv:boofcv-WebcamCapture:0.33'
+  implementation 'org.json:json:20180813'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+task toPi(type: Exec, dependsOn: shadowJar) {
+  workingDir 'build/libs'
+  commandLine 'scp', 'jpiqr-0.0.1-all.jar', 'root@192.168.1.2:~'
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+// To specify a license in the pom:
+install {
+  repositories.mavenInstaller {
+    pom.project {
+      licenses {
+        license {
+          name 'The Apache Software License, Version 2.0'
+          url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          distribution 'repo'
+        }
+      }
+    }
+  }
+}
+
+wrapper {
+    gradleVersion = "5.1.1"
+    distributionType = Wrapper.DistributionType.ALL
+}

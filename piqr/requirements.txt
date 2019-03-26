@@ -1,0 +1,5 @@
+# Run this on the Pi before pip install: apt install python-opencv python-numpy libzbar0
+cv2
+imutils
+numpy
+pyzbar
