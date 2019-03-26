@@ -1,10 +1,11 @@
 from datetime import datetime
+from io import BytesIO
 
 import dateutil.parser
 import uuid
+import qrcode
 
-from flask import request, jsonify
-
+from flask import request, jsonify, make_response
 from .db import AccessKey, db
 
 
@@ -76,3 +77,18 @@ def check_access_key(key):
         return jsonify(key=key, valid=valid)
     except Exception as e:
         return jsonify(msg="Error: %s" % e), 400
+
+
+def get_key_qr_code(key):
+    img = qrcode.make(key)
+
+    with BytesIO() as f:
+        img.save(f)
+        resp = make_response(f.getvalue())
+
+    resp.headers.set('Content-Type', 'image/png')
+    resp.headers.set('Content-Disposition', 'attachment',
+                     filename='hubbahubba-access-code.png')
+
+    return resp
+

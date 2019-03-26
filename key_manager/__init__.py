@@ -3,7 +3,7 @@ import yaml
 
 from flask import Flask
 
-from .access_keys import check_access_key, new_access_key, get_all_access_keys, get_valid_access_keys, revoke_access_key
+from .access_keys import *
 
 
 def create_app(test_config=None):
@@ -48,5 +48,6 @@ def create_app(test_config=None):
     app.add_url_rule('/keys/valid', 'valid_keys', get_valid_access_keys, methods=('GET',))
     app.add_url_rule('/keys/<string:key>', 'revoke', revoke_access_key, methods=('DELETE',))
     app.add_url_rule('/keys/<string:key>', 'check', check_access_key, methods=('GET',))
+    app.add_url_rule('/keys/<string:key>/qrcode', 'qr_code_image', get_key_qr_code, methods=('GET',))
 
     return app

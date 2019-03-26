@@ -4,3 +4,4 @@ itsdangerous
 python-dateutil
 PyYAML
 db-sqlite3
+qrcode[pil]
