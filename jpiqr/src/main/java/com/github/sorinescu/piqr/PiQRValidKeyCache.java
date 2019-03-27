@@ -7,11 +7,12 @@ import org.json.JSONObject;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import io.sentry.Sentry;
 
 public class PiQRValidKeyCache extends Thread {
     OkHttpClient apiClient = new OkHttpClient();
 
-    static final String hardcodedKey = "9d3c03d7a2bd46d99746dee9bed88a76";
+    static final String hardcodedKey = System.getenv("PIQR_HARDCODED_KEY");
 
     private String apiUrl;
     private ArrayList<String> validKeys = new ArrayList();
@@ -29,7 +30,7 @@ public class PiQRValidKeyCache extends Thread {
     }
 
     public boolean authorize(String key) {
-        if (hardcodedKey.equals(key))
+        if (hardcodedKey != null && hardcodedKey.equals(key))
             return true;
 
         synchronized(this) {
@@ -58,7 +59,7 @@ public class PiQRValidKeyCache extends Thread {
                 String responseStr = response.body().string();
                 response.close();
 
-                System.out.println("Got valid keys: " + responseStr);
+                System.out.println("Refreshed valid keys");
 
                 JSONObject json = new JSONObject(responseStr);
                 JSONArray keys = json.getJSONArray("keys");
@@ -75,11 +76,14 @@ public class PiQRValidKeyCache extends Thread {
                 }
             } catch (IOException e) {
                 System.err.println("Got exception: " + e.toString());
+                Sentry.capture(e);
             }
 
             try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {}
+                Thread.sleep(60000);
+            } catch (InterruptedException e) {
+                Sentry.capture(e);
+            }
         }
     }
 }

@@ -8,14 +8,13 @@ import com.pi4j.io.gpio.PinMode;
 import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
+import io.sentry.Sentry;
 
 class PiDoorOpener implements Closeable {
     GpioController gpio;
     GpioPinDigitalMultipurpose doorLockPin;
 
     public PiDoorOpener() {
-        // GpioFactory.setDefaultProvider(new RaspiGpioProvider(RaspiPinNumberingScheme.BROADCOM_PIN_NUMBERING));
-
 	    gpio = GpioFactory.getInstance();
 	    doorLockPin = gpio.provisionDigitalMultipurposePin(
 	    	RaspiPin.GPIO_02,
@@ -38,6 +37,8 @@ class PiDoorOpener implements Closeable {
 		doorLockPin.low();
 		try {
 			Thread.sleep(200);
+        } catch (Exception e) {
+            Sentry.capture(e);
 		} finally {
 			doorLockPin.high();
 			doorLockPin.setMode(PinMode.DIGITAL_INPUT);

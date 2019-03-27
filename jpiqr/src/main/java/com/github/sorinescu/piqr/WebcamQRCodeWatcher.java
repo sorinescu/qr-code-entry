@@ -10,6 +10,7 @@ import boofcv.struct.image.GrayU8;
 import boofcv.io.webcamcapture.UtilWebcamCapture;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.ds.v4l4j.V4l4jDriver;
+import io.sentry.Sentry;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -26,45 +27,80 @@ public class WebcamQRCodeWatcher extends Thread {
 	public void run() {
 		System.out.println("Starting QR code reader thread");
 
-		Webcam webcam = UtilWebcamCapture.openDefault(320, 240);
-		System.out.println("Opened webcam");
+		long exceptionResetT0 = System.currentTimeMillis();
+		int exceptionCount = 0;
 
-		QrCodeDetector<GrayU8> detector = FactoryFiducial.qrcode(null, GrayU8.class);
-		System.out.println("Opened QR code detector");
+		Webcam webcam = null;
 
+		while (true) {
+			try {
+				webcam = UtilWebcamCapture.openDefault(320, 240);
+			} catch (Exception e) {
+				System.err.println("Got fatal exception in webcam thread: " + e.toString());
+				Sentry.capture(e);
 
-		while( true ) {
-			BufferedImage input = webcam.getImage();
-			if( input == null ) break;
-
-			// System.out.println("Got image");
-
-			GrayU8 gray = ConvertBufferedImage.convertFrom(input, (GrayU8)null);
-			// System.out.println("Converted image");
-
-			detector.process(gray);
-			// System.out.println("Processed image");
-
-			// Get's a list of all the qr codes it could successfully detect and decode
-			List<QrCode> detections = detector.getDetections();
-			// System.out.println("Got detections: " + detections.toString());
-
-			for( QrCode qr : detections ) {
-				// The message encoded in the marker
-				System.out.println("Got QR code: " + qr.message);
-
-				codeQueue.offer(qr.message);
+				System.exit(-1);
 			}
 
-			// List of objects it thinks might be a QR Code but failed for various reasons
-			List<QrCode> failures = detector.getFailures();
-			// System.out.println("Got failures: " + failures.toString());
-			for( QrCode qr : failures ) {
-				// If the 'cause' is ERROR_CORRECTION or later then it's probably a real QR Code that
-				if( qr.failureCause.ordinal() < QrCode.Failure.ERROR_CORRECTION.ordinal() )
-					continue;
+			try {
+				System.out.println("Opened webcam");
 
-				System.out.println("QR failure");
+				QrCodeDetector<GrayU8> detector = FactoryFiducial.qrcode(null, GrayU8.class);
+				System.out.println("Opened QR code detector");
+
+				while (true) {
+					BufferedImage input = webcam.getImage();
+					if (input == null)
+						break;
+
+					// System.out.println("Got image");
+
+					GrayU8 gray = ConvertBufferedImage.convertFrom(input, (GrayU8)null);
+					// System.out.println("Converted image");
+
+					detector.process(gray);
+					// System.out.println("Processed image");
+
+					// Get's a list of all the qr codes it could successfully detect and decode
+					List<QrCode> detections = detector.getDetections();
+					// System.out.println("Got detections: " + detections.toString());
+
+					for (QrCode qr : detections) {
+						// The message encoded in the marker
+						System.out.println("Got QR code: " + qr.message);
+
+						codeQueue.offer(qr.message);
+					}
+
+					// List of objects it thinks might be a QR Code but failed for various reasons
+					List<QrCode> failures = detector.getFailures();
+					// System.out.println("Got failures: " + failures.toString());
+					for (QrCode qr : failures) {
+						// If the 'cause' is ERROR_CORRECTION or later then it's probably a real QR Code that
+						if (qr.failureCause.ordinal() < QrCode.Failure.ERROR_CORRECTION.ordinal())
+							continue;
+
+						System.out.println("QR failure");
+					}
+				}
+			} catch (Exception e) {
+				System.err.println("Got exception in webcam thread: " + e.toString());
+
+				// We allow at most 5 exceptions per minute to prevent Sentry flooding
+				long t = System.currentTimeMillis();
+				if (t - exceptionResetT0 > 60000) {
+					exceptionResetT0 = t;
+					exceptionCount = 0;
+				}
+
+				if (++exceptionCount == 5) {
+					System.err.println("Got too many exceptions too quickly in webcam thread, exiting");
+					System.exit(-2);
+				}
+
+				Sentry.capture(e);
+			} finally {
+				webcam.close();
 			}
 		}
 	}
@@ -74,6 +110,7 @@ public class WebcamQRCodeWatcher extends Thread {
 			return codeQueue.take();
 		} catch (InterruptedException e) {
 			System.err.println("Got exception" + e.toString());
+			Sentry.capture(e);
 			return "";
 		}
 	}

@@ -3,6 +3,7 @@ package com.github.sorinescu.piqr;
 import java.io.IOException;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import io.sentry.Sentry;
 
 public class PiQRController {
     @Parameter(names = "--api_url", description = "Base URL of authentication API", required = true)
@@ -11,28 +12,35 @@ public class PiQRController {
     public static void main(String[] argv) throws IOException, InterruptedException {
         System.out.println("Pi QR Controller");
 
-        PiQRController controller = new PiQRController();
+        // Reads DSN from the "SENTRY_DSN" env var
+        Sentry.init();
 
-        JCommander.newBuilder()
-          .addObject(controller)
-          .build()
-          .parse(argv);
+        try {
+            PiQRController controller = new PiQRController();
 
-        WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher();
-        qrCodeWatcher.start();
+            JCommander.newBuilder()
+              .addObject(controller)
+              .build()
+              .parse(argv);
 
-        PiQRValidKeyCache validKeyCache = new PiQRValidKeyCache(controller.apiUrl);
-        validKeyCache.start();
+            WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher();
+            qrCodeWatcher.start();
 
-        try (PiDoorOpener doorOpener = new PiDoorOpener()) {
-            while (true) {
-                String key = qrCodeWatcher.getQRCode().trim().toLowerCase();
+            PiQRValidKeyCache validKeyCache = new PiQRValidKeyCache(controller.apiUrl);
+            validKeyCache.start();
 
-                if (validKeyCache.authorize(key)) {
-                    doorOpener.openDoor();
-                    // TODO: notify key manager that the key has been used to upen the door
+            try (PiDoorOpener doorOpener = new PiDoorOpener()) {
+                while (true) {
+                    String key = qrCodeWatcher.getQRCode().trim().toLowerCase();
+
+                    if (validKeyCache.authorize(key)) {
+                        doorOpener.openDoor();
+                        // TODO: notify key manager that the key has been used to upen the door
+                    }
                 }
             }
+        } catch (Exception e) {
+            Sentry.capture(e);
         }
     }
 }
