@@ -1,9 +1,10 @@
 package com.github.sorinescu.piqr;
 
 import java.io.Closeable;
+import java.util.logging.Logger;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.GpioPinDigitalMultipurpose;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.PinMode;
 import com.pi4j.io.gpio.PinPullResistance;
 import com.pi4j.io.gpio.PinState;
@@ -11,37 +12,38 @@ import com.pi4j.io.gpio.RaspiPin;
 import io.sentry.Sentry;
 
 class PiDoorOpener implements Closeable {
+    private static final Logger logger = Logging.getLogger(PiDoorOpener.class.getName());
+
     GpioController gpio;
-    GpioPinDigitalMultipurpose doorLockPin;
+    GpioPinDigitalOutput doorLockPin;
 
     public PiDoorOpener() {
 	    gpio = GpioFactory.getInstance();
-	    doorLockPin = gpio.provisionDigitalMultipurposePin(
+	    doorLockPin = gpio.provisionDigitalOutputPin(
 	    	RaspiPin.GPIO_02,
-	    	PinMode.DIGITAL_INPUT,
-	    	PinPullResistance.OFF);
+	    	PinState.LOW);
 
         // set shutdown state for this pin
-        doorLockPin.setShutdownOptions(true, PinState.HIGH, PinPullResistance.OFF, PinMode.DIGITAL_INPUT);
+        doorLockPin.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF, PinMode.DIGITAL_INPUT);
 
-		System.out.println("Initialised GPIO");
+		logger.info("Initialised GPIO");
 	}
 
 	public void close() {
-		System.out.println("Shutting down GPIO");
+		logger.info("Shutting down GPIO");
         gpio.shutdown();
 	}
 
 	public void openDoor() throws InterruptedException {
-		doorLockPin.setMode(PinMode.DIGITAL_OUTPUT);
-		doorLockPin.low();
+        logger.info("Opening door");
+
+		doorLockPin.high();
 		try {
 			Thread.sleep(200);
         } catch (Exception e) {
             Sentry.capture(e);
 		} finally {
-			doorLockPin.high();
-			doorLockPin.setMode(PinMode.DIGITAL_INPUT);
+			doorLockPin.low();
 		}
 	}
 }

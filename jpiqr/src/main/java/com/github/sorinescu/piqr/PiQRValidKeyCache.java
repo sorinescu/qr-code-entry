@@ -2,6 +2,7 @@ package com.github.sorinescu.piqr;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import okhttp3.OkHttpClient;
@@ -10,6 +11,8 @@ import okhttp3.Response;
 import io.sentry.Sentry;
 
 public class PiQRValidKeyCache extends Thread {
+    private static final Logger logger = Logging.getLogger(PiQRValidKeyCache.class.getName());
+
     OkHttpClient apiClient = new OkHttpClient();
 
     static final String hardcodedKey = System.getenv("PIQR_HARDCODED_KEY");
@@ -44,7 +47,7 @@ public class PiQRValidKeyCache extends Thread {
     }
 
     public void run() {
-        System.out.println("Started valid key cache");
+        logger.info("Started valid key cache");
 
         String apiKey = getApiKey();
         Request request = new Request.Builder()
@@ -52,14 +55,14 @@ public class PiQRValidKeyCache extends Thread {
             .addHeader("Authorization", "Token " + apiKey)
             .build();
 
-        System.out.println("Built request");
+        logger.info("Built request");
 
         while (true) {
             try (Response response = apiClient.newCall(request).execute()) {
                 String responseStr = response.body().string();
                 response.close();
 
-                System.out.println("Refreshed valid keys");
+                logger.info("Refreshed valid keys");
 
                 JSONObject json = new JSONObject(responseStr);
                 JSONArray keys = json.getJSONArray("keys");
@@ -75,7 +78,7 @@ public class PiQRValidKeyCache extends Thread {
                     validKeys = localValidKeys;
                 }
             } catch (IOException e) {
-                System.err.println("Got exception: " + e.toString());
+                logger.severe("Got exception: " + e.toString());
                 Sentry.capture(e);
             }
 

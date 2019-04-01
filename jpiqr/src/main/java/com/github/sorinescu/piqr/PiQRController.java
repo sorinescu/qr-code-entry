@@ -1,16 +1,19 @@
 package com.github.sorinescu.piqr;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import io.sentry.Sentry;
 
 public class PiQRController {
+    private static final Logger logger = Logging.getLogger(PiQRController.class.getName());
+
     @Parameter(names = "--api_url", description = "Base URL of authentication API", required = true)
     private String apiUrl;
 
     public static void main(String[] argv) throws IOException, InterruptedException {
-        System.out.println("Pi QR Controller");
+        logger.info("Pi QR Controller");
 
         // Reads DSN from the "SENTRY_DSN" env var
         Sentry.init();
