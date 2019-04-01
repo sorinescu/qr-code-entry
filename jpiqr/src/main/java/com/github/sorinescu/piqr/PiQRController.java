@@ -9,14 +9,11 @@ import io.sentry.Sentry;
 public class PiQRController {
     private static final Logger logger = Logging.getLogger(PiQRController.class.getName());
 
-    @Parameter(names = "--api_url", description = "Base URL of authentication API", required = true)
-    private String apiUrl;
+    @Parameter(names = "--config", description = "Configuration file path")
+    private String configFilePath = "piqr.properties";
 
     public static void main(String[] argv) throws IOException, InterruptedException {
         logger.info("Pi QR Controller");
-
-        // Reads DSN from the "SENTRY_DSN" env var
-        Sentry.init();
 
         try {
             PiQRController controller = new PiQRController();
@@ -26,10 +23,14 @@ public class PiQRController {
               .build()
               .parse(argv);
 
+            Config config = new Config(controller.configFilePath);
+
+            Sentry.init(config.sentryDsn);
+
             WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher();
             qrCodeWatcher.start();
 
-            PiQRValidKeyCache validKeyCache = new PiQRValidKeyCache(controller.apiUrl);
+            PiQRValidKeyCache validKeyCache = new PiQRValidKeyCache(config.apiUrl, config.apiKey, config.hardcodedQRCode);
             validKeyCache.start();
 
             try (PiDoorOpener doorOpener = new PiDoorOpener()) {
@@ -43,7 +44,9 @@ public class PiQRController {
                 }
             }
         } catch (Exception e) {
+            logger.severe("Got exception in main: " + e.toString());
             Sentry.capture(e);
+            System.exit(-1);
         }
     }
 }

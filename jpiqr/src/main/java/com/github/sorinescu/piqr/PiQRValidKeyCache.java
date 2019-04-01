@@ -15,21 +15,15 @@ public class PiQRValidKeyCache extends Thread {
 
     OkHttpClient apiClient = new OkHttpClient();
 
-    static final String hardcodedKey = System.getenv("PIQR_HARDCODED_KEY");
-
     private String apiUrl;
+    private String apiKey;
+    private String hardcodedKey;
     private ArrayList<String> validKeys = new ArrayList();
 
-    PiQRValidKeyCache(String apiUrl) {
+    PiQRValidKeyCache(String apiUrl, String apiKey, String hardcodedKey) {
         this.apiUrl = apiUrl;
-    }
-
-    private String getApiKey() {
-        String apiKey = System.getenv("KEY_MANAGER_API_KEY");
-        if (apiKey == null)
-            throw new RuntimeException("KEY_MANAGER_API_KEY environment variable must be set");
-
-        return apiKey;
+        this.apiKey = apiKey;
+        this.hardcodedKey = hardcodedKey;
     }
 
     public boolean authorize(String key) {
@@ -49,7 +43,6 @@ public class PiQRValidKeyCache extends Thread {
     public void run() {
         logger.info("Started valid key cache");
 
-        String apiKey = getApiKey();
         Request request = new Request.Builder()
             .url(apiUrl + "/keys/valid")
             .addHeader("Authorization", "Token " + apiKey)
