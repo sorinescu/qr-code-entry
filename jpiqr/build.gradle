@@ -45,7 +45,7 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 task toPi(dependsOn: shadowJar) {
   doLast {
     exec {
-      commandLine 'scp', "build/libs/jpiqr-${version}-all.jar", 'root@192.168.1.2:~'
+      commandLine 'scp', "build/libs/piqr-${version}-all.jar", 'root@192.168.1.2:~'
     }
     exec {
       commandLine 'scp', 'systemd/piqr.service', 'root@192.168.1.2:/etc/systemd/system/'

@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/java -jar /root/jpiqr-0.0.1-all.jar
+ExecStart=/usr/bin/java -jar /root/piqr-0.0.1-all.jar --config /root/piqr.properties
 
 Restart=on-abnormal
 
