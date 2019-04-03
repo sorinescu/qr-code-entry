@@ -45,7 +45,7 @@ public class PiQRValidKeyCache extends Thread {
 
         Request request = new Request.Builder()
             .url(apiUrl + "/keys/valid")
-            .addHeader("Authorization", "Token " + apiKey)
+            .addHeader("Authorization", "Bearer " + apiKey)
             .build();
 
         logger.info("Built request");

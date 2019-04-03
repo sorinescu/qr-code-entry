@@ -1,5 +1,4 @@
 import os
-import yaml
 
 from flask import Flask
 
@@ -10,24 +9,15 @@ def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
     app = Flask(__name__, instance_relative_config=True, )
     app.config.from_mapping(
-        # a default secret that should be overridden by instance config
-        SECRET_KEY='dev',
         API_TOKEN='123',
         SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(app.instance_path, 'auth-keys.db')
     )
 
     if test_config is None:
-        # load the instance config, if it exists, when not testing
-        try:
-            with open("config.yml", 'r') as f:
-                config = yaml.load(f)
-                # print(config)
-                app.config.from_mapping(config)
-        except FileNotFoundError:
-            pass
+        app.config.from_envvar('KEY_MANAGER_CONFIG')
     else:
         # load the test config if passed in
-        app.config.update(test_config)
+        app.config.from_mapping(test_config)
 
     # ensure the instance folder exists
     try:
@@ -36,12 +26,12 @@ def create_app(test_config=None):
         pass
 
     # Register the database commands
-    from key_manager import db
-    db.init_app(app)
+    from .db import init_app
+    init_app(app)
 
     # Apply the blueprints to the app
-    from key_manager import auth
-    app.before_request(auth.token_required)
+    from .auth import token_required
+    app.before_request(token_required)
 
     app.add_url_rule('/keys', 'new', new_access_key, methods=('POST',))
     app.add_url_rule('/keys', 'keys', get_all_access_keys, methods=('GET',))
