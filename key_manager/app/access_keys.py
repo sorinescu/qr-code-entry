@@ -1,3 +1,6 @@
+import os
+import sys
+
 from datetime import datetime
 from io import BytesIO
 
@@ -9,6 +12,19 @@ from flask import request, jsonify, make_response
 from PIL import Image
 
 from .db import AccessKey, db
+
+
+# See https://stackoverflow.com/questions/16771894/python-nameerror-global-name-file-is-not-defined/41546830#41546830
+def _rel_file_path(filename):
+    if getattr(sys, 'frozen', False):
+        # The application is frozen
+        datadir = os.path.dirname(sys.executable)
+    else:
+        # The application is not frozen
+        # Change this bit to match where you store your data files:
+        datadir = os.path.dirname(__file__)
+
+    return os.path.join(datadir, filename)
 
 
 def new_access_key():
@@ -85,7 +101,7 @@ def get_key_qr_code(key):
     qr = qrcode.QRCode(error_correction=qrcode.ERROR_CORRECT_H, box_size=10)
 
     # logo = Image.open('logo-transp.png')
-    logo = Image.open('logo.jpg')
+    logo = Image.open(_rel_file_path('../static/img/logo.jpg'))
 
     qr.add_data(key)
     # qr_img = qr.make_image(back_color='transparent')
