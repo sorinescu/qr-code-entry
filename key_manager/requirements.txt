@@ -2,6 +2,6 @@ flask
 flask_sqlalchemy
 itsdangerous
 python-dateutil
+pysqlite3
 PyYAML
-db-sqlite3
 qrcode[pil]

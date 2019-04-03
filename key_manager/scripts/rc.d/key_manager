@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# $FreeBSD$
+#
+
+# PROVIDE: key_manager
+# REQUIRE: DAEMON networking syslog
+# BEFORE:  LOGIN
+# KEYWORD: nojail shutdown
+
+. /etc/rc.subr
+
+name="key_manager"
+desc="PiQR access key manager"
+command="/usr/sbin/daemon"
+command_args="-P /var/run/${name}.pid -o /var/log/${name}.log -u piqr -r -t ${name} -T ${name} scripts/key_manager.sh"
+
+rcvar="${name}_enable"
+pidfile="/var/run/${name}.pid"
+
+key_manager_chdir="/home/piqr/key_manager"
+required_files="/home/piqr/key_manager/config.cfg /home/piqr/key_manager/access-keys.db"
+
+load_rc_config $name
+run_rc_command "$1"
