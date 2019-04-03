@@ -13,7 +13,7 @@ class Logging {
     static {
         // Global log format
         System.setProperty("java.util.logging.SimpleFormatter.format",
-            "[%1$tF %1$tT.%1$tL][%4$s] %5$s%n");
+                           "[%1$tF %1$tT.%1$tL][%4$s] %5$s%n");
 
         Logger logger = Logger.getLogger("");   // root logger
 
