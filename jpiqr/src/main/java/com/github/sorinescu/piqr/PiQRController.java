@@ -27,10 +27,12 @@ public class PiQRController {
 
             Sentry.init(config.sentryDsn);
 
-            WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher();
+            WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher(config);
+            qrCodeWatcher.setDaemon(true);
             qrCodeWatcher.start();
 
             PiQRValidKeyCache validKeyCache = new PiQRValidKeyCache(config.apiUrl, config.apiKey, config.hardcodedQRCode);
+            validKeyCache.setDaemon(true);
             validKeyCache.start();
 
             try (PiDoorOpener doorOpener = new PiDoorOpener()) {

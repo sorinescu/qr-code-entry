@@ -13,6 +13,9 @@ class Config {
     String apiKey;
     String sentryDsn;
     String hardcodedQRCode;
+    String hubctrlExe;
+    int webcamUsbHub;
+    int webcamUsbPort;
 
     public Config(String configFilePath) throws IOException {
         InputStream inputStream = null;
@@ -32,6 +35,10 @@ class Config {
 
             sentryDsn = prop.getProperty("sentryDsn", System.getProperty("sentryDsn"));
             hardcodedQRCode = prop.getProperty("hardcodedQRCode", System.getProperty("hardcodedQRCode"));
+
+            hubctrlExe = prop.getProperty("hubctrlExe", System.getProperty("hubctrlExe"));
+            webcamUsbHub = Integer.parseInt(prop.getProperty("webcamUsbHub", System.getProperty("webcamUsbHub", "0")));
+            webcamUsbPort = Integer.parseInt(prop.getProperty("webcamUsbPort", System.getProperty("webcamUsbPort", "0")));
         } finally {
             if (inputStream != null)
                 inputStream.close();

@@ -6,7 +6,7 @@ import java.util.logging.SimpleFormatter;
 import java.io.IOException;
 
 class Logging {
-    public static final String LOG_FILE_PATH = "/%t/piqr.log";
+    public static final String LOG_FILE_PATH = "/var/log/piqr.log";
     public static final int MAX_LOG_SIZE = 1048576;
     public static final int MAX_LOG_FILES = 3;
 
