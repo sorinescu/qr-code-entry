@@ -2,6 +2,8 @@ apiUrl=http://192.168.1.1:5000/
 apiKey=SUPER_SECRET_API_KEY
 #sentryDsn=YOUR_SENTRY_DSN
 #hardcodedQRCode=SOME_MASTER_QR_CODE
+
+# This must be compiled from https://github.com/codazoda/hub-ctrl.c
 hubctrlExe=/usr/local/bin/hub-ctrl
 webcamUsbHub=1
 webcamUsbPort=1
