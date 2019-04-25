@@ -23,9 +23,8 @@ import sun.misc.SignalHandler;
 class WebcamQRCodeWatcher extends Thread implements SignalHandler {
 	private static final Logger logger = Logging.getLogger(WebcamQRCodeWatcher.class.getName());
 
+	private LifecycleManager lifecycleManager = null;
 	private SynchronousQueue<String> codeQueue = new SynchronousQueue();
-	private PiRelayController relayController;
-
 	private BufferedImage currentImage = null;
 
 	static {
@@ -33,8 +32,8 @@ class WebcamQRCodeWatcher extends Thread implements SignalHandler {
 		Webcam.setDriver(new V4l4jDriver());
 	}
 
-	public WebcamQRCodeWatcher(Config config, PiRelayController relayController) {
-		this.relayController = relayController;
+	public WebcamQRCodeWatcher(LifecycleManager lifecycleManager) {
+		this.lifecycleManager = lifecycleManager;
 	}
 
 	public void run() {
@@ -119,24 +118,7 @@ class WebcamQRCodeWatcher extends Thread implements SignalHandler {
 				logger.severe("Got exception in webcam thread: " + e.toString());
 				Sentry.capture(e);
 
-				// System.exit() does not exit correctly here
-				// System.exit(-2);
-
-				// Not even halt() works all the time - if the webcam fails, the process can't exit
-				// Runtime.getRuntime().halt(-2);
-
-				Runtime rt = Runtime.getRuntime();
-
-				try {
-					logger.warning("Power cycling the webcam");
-					relayController.resetWebcam();
-
-					logger.warning("Rebooting");
-					rt.exec("reboot");
-				} catch (Exception e2) {
-					logger.severe("Got exception while rebooting: " + e2.toString());
-					Sentry.capture(e2);
-				}
+				lifecycleManager.reboot();
 			}
 		}
 	}

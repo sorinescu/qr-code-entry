@@ -7,3 +7,6 @@ apiKey=SUPER_SECRET_API_KEY
 # We are using the WiringPi numbering scheme.
 doorOpenGpioPin=2
 webcamPowerGpioPin=3
+
+# If <= 0, never exit
+serviceExitTimeoutMinutes=120

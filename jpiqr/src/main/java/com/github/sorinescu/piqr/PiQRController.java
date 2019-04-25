@@ -28,7 +28,8 @@ public class PiQRController {
             Sentry.init(config.sentryDsn);
 
             try (PiRelayController relayController = new PiRelayController(config)) {
-                WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher(config, relayController);
+                LifecycleManager lifecycleManager = new LifecycleManager(config, relayController);
+                WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher(lifecycleManager);
                 qrCodeWatcher.setDaemon(true);
                 qrCodeWatcher.start();
 

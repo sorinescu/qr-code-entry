@@ -15,6 +15,7 @@ class Config {
     String hardcodedQRCode;
     int doorOpenGpioPin;
     int webcamPowerGpioPin;
+    int serviceExitTimeoutMinutes;
 
     public Config(String configFilePath) throws IOException {
         InputStream inputStream = null;
@@ -37,6 +38,8 @@ class Config {
 
             doorOpenGpioPin = Integer.parseInt(prop.getProperty("doorOpenGpioPin", System.getProperty("doorOpenGpioPin", "2")));
             webcamPowerGpioPin = Integer.parseInt(prop.getProperty("webcamPowerGpioPin", System.getProperty("webcamPowerGpioPin", "3")));
+
+            serviceExitTimeoutMinutes = Integer.parseInt(prop.getProperty("serviceExitTimeoutMinutes", System.getProperty("serviceExitTimeoutMinutes", "120")));
         } finally {
             if (inputStream != null)
                 inputStream.close();
