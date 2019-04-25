@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 ExecStart=/usr/bin/java -jar /root/piqr-0.0.1-all.jar --config /root/piqr.properties
 
-Restart=on-abnormal
+Restart=always
 
 # If the application fails 3 times in 30 seconds, something has gone wrong,
 # and the state of the hardware can't be guaranteed. Reboot the system here.
@@ -16,7 +16,7 @@ StartLimitAction=reboot
 
 # StartLimitAction=reboot will reboot the box if the app fails repeatedly,
 # but if the app exits voluntarily, the reboot should trigger immediately
-FailureAction=reboot
+#FailureAction=reboot
 
 [Install]
 WantedBy=multi-user.target

@@ -17,29 +17,30 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.concurrent.SynchronousQueue;
 
-class WebcamQRCodeWatcher extends Thread {
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
+class WebcamQRCodeWatcher extends Thread implements SignalHandler {
 	private static final Logger logger = Logging.getLogger(WebcamQRCodeWatcher.class.getName());
 
 	private SynchronousQueue<String> codeQueue = new SynchronousQueue();
-	private String usbPoweroffCmd = null;
+	private PiRelayController relayController;
+
+	private BufferedImage currentImage = null;
 
 	static {
 		// This is necessary for RaspberryPi
 		Webcam.setDriver(new V4l4jDriver());
 	}
 
-	public WebcamQRCodeWatcher(Config config) {
-		if (config.hubctrlExe != null) {
-			usbPoweroffCmd = String.format("%s -h %d -P %d -p 0",
-				config.hubctrlExe, config.webcamUsbHub, config.webcamUsbPort);
-		}
+	public WebcamQRCodeWatcher(Config config, PiRelayController relayController) {
+		this.relayController = relayController;
 	}
 
 	public void run() {
 		logger.info("Starting QR code reader thread");
 
-		// wtf
-		try {Thread.sleep(10000);} catch (Exception e) {}
+		Signal.handle(new Signal("USR2"), this);
 
 		Webcam webcam = null;
 
@@ -71,28 +72,17 @@ class WebcamQRCodeWatcher extends Thread {
 						if (nullCount > 2)
 							logger.info("Got " + Integer.toString(nullCount) + " null webcam images");
 
-						// if (nullCount == 60) {
-						// 	// Reopen webcam
-						// 	logger.warning("Reopening webcam");
-
-						// 	webcam.close();
-						// 	logger.warning("Closed webcam");
-						// 	Thread.sleep(1000);
-						// 	webcam = UtilWebcamCapture.openDefault(320, 240);
-						// 	logger.info("Reopened webcam " + webcam.getName());
-						// } else if (nullCount == 120) {
-						// 	// This can't be salvaged
-						// 	// TODO: cut power to USB port
-						// 	throw new RuntimeException("Got too many null webcam images");
-						// } else
-						// 	Thread.sleep(1000);
-						if (nullCount == 30) {
+						if (nullCount == 10) {
 							// This can't be salvaged
 							throw new RuntimeException("Got too many null webcam images");
 						} else
 							Thread.sleep(1000);
 
 						input = webcam.getImage();
+					}
+
+					synchronized(this) {
+						currentImage = input;
 					}
 
 					// logger.info("Got image");
@@ -132,18 +122,14 @@ class WebcamQRCodeWatcher extends Thread {
 				// System.exit() does not exit correctly here
 				// System.exit(-2);
 
-				// Not even halt() works all the time
+				// Not even halt() works all the time - if the webcam fails, the process can't exit
 				// Runtime.getRuntime().halt(-2);
 
 				Runtime rt = Runtime.getRuntime();
 
 				try {
-					if (usbPoweroffCmd != null) {
-						logger.warning("Powering off USB with: " + usbPoweroffCmd);
-						rt.exec(usbPoweroffCmd);
-
-						Thread.sleep(1000);
-					}
+					logger.warning("Power cycling the webcam");
+					relayController.resetWebcam();
 
 					logger.warning("Rebooting");
 					rt.exec("reboot");
@@ -162,6 +148,20 @@ class WebcamQRCodeWatcher extends Thread {
 			logger.severe("Got exception" + e.toString());
 			Sentry.capture(e);
 			return "";
+		}
+	}
+
+	public void handle(Signal signal) {
+		logger.info("Signal: " + signal);
+
+		if (signal.toString().trim().equals("SIGTERM")) {
+			System.out.println("SIGTERM raised, terminating...");
+			System.exit(1);
+		}
+
+		synchronized(this) {
+			if (currentImage != null)
+				UtilImageIO.saveImage(currentImage, "/tmp/piqr-webcam-image.jpg");
 		}
 	}
 }

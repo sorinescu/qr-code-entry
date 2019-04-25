@@ -19,28 +19,28 @@ public class PiQRController {
             PiQRController controller = new PiQRController();
 
             JCommander.newBuilder()
-              .addObject(controller)
-              .build()
-              .parse(argv);
+            .addObject(controller)
+            .build()
+            .parse(argv);
 
             Config config = new Config(controller.configFilePath);
 
             Sentry.init(config.sentryDsn);
 
-            WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher(config);
-            qrCodeWatcher.setDaemon(true);
-            qrCodeWatcher.start();
+            try (PiRelayController relayController = new PiRelayController(config)) {
+                WebcamQRCodeWatcher qrCodeWatcher = new WebcamQRCodeWatcher(config, relayController);
+                qrCodeWatcher.setDaemon(true);
+                qrCodeWatcher.start();
 
-            PiQRValidKeyCache validKeyCache = new PiQRValidKeyCache(config.apiUrl, config.apiKey, config.hardcodedQRCode);
-            validKeyCache.setDaemon(true);
-            validKeyCache.start();
+                PiQRValidKeyCache validKeyCache = new PiQRValidKeyCache(config.apiUrl, config.apiKey, config.hardcodedQRCode);
+                validKeyCache.setDaemon(true);
+                validKeyCache.start();
 
-            try (PiDoorOpener doorOpener = new PiDoorOpener()) {
                 while (true) {
                     String key = qrCodeWatcher.getQRCode().trim().toLowerCase();
 
                     if (validKeyCache.authorize(key)) {
-                        doorOpener.openDoor();
+                        relayController.openDoor();
                         // TODO: notify key manager that the key has been used to upen the door
                     }
                 }
