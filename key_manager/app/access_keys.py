@@ -92,7 +92,7 @@ def check_access_key(key):
     try:
         access_key = AccessKey.query.filter_by(key=key).first()
         valid = access_key is not None and access_key.expires_at > datetime.utcnow()
-        return jsonify(key=key, valid=valid)
+        return jsonify(key=key, metadata=access_key.metadata, valid=valid)
     except Exception as e:
         return jsonify(msg="Error: %s" % e), 400
 
