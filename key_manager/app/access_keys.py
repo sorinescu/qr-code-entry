@@ -46,7 +46,31 @@ def new_access_key():
         access_key = AccessKey(key=key, expires_at=expires_at, meta=metadata)
         db.session.add(access_key)
         db.session.commit()
-        return jsonify(key=key, expires_at=expires_at)
+        return jsonify(key=key, metadata=metadata, expires_at=expires_at)
+    except Exception as e:
+        return jsonify(msg="Error: %s" % e), 400
+
+
+def update_access_key(key):
+    try:
+        access_key = AccessKey.query.filter_by(key=key).first()
+        params = request.get_json()
+
+        if access_key is None:
+            return jsonify(msg='Unknown access key'), 404
+
+        if 'expires_at' in params:
+            try:
+                access_key.expires_at = dateutil.parser.parse(params['expires_at'])
+            except ValueError:
+                raise ValueError("Invalid format for 'expires_at'")
+
+        if 'metadata' in params:
+            access_key.metadata = params['metadata']
+
+        db.session.commit()
+
+        return jsonify(key=key, metadata=access_key.metadata, expires_at=access_key.expires_at)
     except Exception as e:
         return jsonify(msg="Error: %s" % e), 400
 
@@ -54,9 +78,12 @@ def new_access_key():
 def revoke_access_key(key):
     try:
         access_key = AccessKey.query.filter_by(key=key).first()
-        if access_key is not None:
-            db.session.delete(access_key)
-            db.session.commit()
+
+        if access_key is None:
+            return jsonify(msg='Unknown access key'), 404
+
+        db.session.delete(access_key)
+        db.session.commit()
         return jsonify(msg='Ok')
     except Exception as e:
         return jsonify(msg="Error: %s" % e), 400

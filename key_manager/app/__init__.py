@@ -38,6 +38,7 @@ def create_app(test_config=None):
     app.add_url_rule('/keys/valid', 'valid_keys', get_valid_access_keys, methods=('GET',))
     app.add_url_rule('/keys/<string:key>', 'revoke', revoke_access_key, methods=('DELETE',))
     app.add_url_rule('/keys/<string:key>', 'check', check_access_key, methods=('GET',))
+    app.add_url_rule('/keys/<string:key>', 'update', update_access_key, methods=('PUT',))
     app.add_url_rule('/keys/<string:key>/qrcode', 'qr_code_image', get_key_qr_code, methods=('GET',))
 
     return app
