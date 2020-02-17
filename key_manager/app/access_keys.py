@@ -130,7 +130,9 @@ def get_key_qr_code(key):
     # logo = Image.open('logo-transp.png')
     logo = Image.open(_rel_file_path('../static/img/logo.jpg'))
 
-    qr.add_data(key)
+    uu = uuid.UUID(hex=key)
+    qr.add_data(uu.bytes)
+
     # qr_img = qr.make_image(back_color='transparent')
     qr_img = qr.make_image(fill_color='#010101')
 

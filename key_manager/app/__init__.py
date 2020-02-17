@@ -1,5 +1,3 @@
-import os
-
 from flask import Flask
 
 from .access_keys import *
@@ -7,7 +5,7 @@ from .access_keys import *
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
-    app = Flask(__name__, instance_relative_config=True, )
+    app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         API_TOKEN='123',
         SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(app.instance_path, 'auth-keys.db')
