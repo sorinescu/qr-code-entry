@@ -1,20 +1,20 @@
 package com.github.sorinescu.jpiqr;
 
 import boofcv.abst.fiducial.QrCodeDetector;
+import boofcv.alg.fiducial.qrcode.EciEncoding;
 import boofcv.alg.fiducial.qrcode.QrCode;
+import boofcv.factory.fiducial.ConfigQrCode;
 import boofcv.factory.fiducial.FactoryFiducial;
 import boofcv.gui.feature.VisualizeShapes;
-import boofcv.gui.image.ShowImages;
-import boofcv.io.UtilIO;
 import boofcv.io.image.ConvertBufferedImage;
-import boofcv.io.image.UtilImageIO;
-import boofcv.struct.image.GrayU8;
 import boofcv.io.webcamcapture.UtilWebcamCapture;
+import boofcv.struct.image.GrayU8;
 import com.github.sarxos.webcam.Webcam;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 public class ExampleDetectQrCode extends JPanel {
@@ -49,11 +49,13 @@ public class ExampleDetectQrCode extends JPanel {
 
 		workImage = new BufferedImage((int)actualSize.getWidth(), (int)actualSize.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-		QrCodeDetector<GrayU8> detector = FactoryFiducial.qrcode(null, GrayU8.class);
+		ConfigQrCode qrConfig = new ConfigQrCode();
+		qrConfig.forceEncoding = EciEncoding.ISO8859_1;
+		QrCodeDetector<GrayU8> detector = FactoryFiducial.qrcode(qrConfig, GrayU8.class);
 
 		while( true ) {
 			BufferedImage input = webcam.getImage();
-			if( input == null ) break;
+			if( input == null ) continue;
 
 			GrayU8 gray = ConvertBufferedImage.convertFrom(input,(GrayU8)null);
 
@@ -72,8 +74,14 @@ public class ExampleDetectQrCode extends JPanel {
 				g2.setStroke(new BasicStroke(strokeWidth));
 
 				for( QrCode qr : detections ) {
-					// The message encoded in the marker
-					System.out.println("message: "+qr.message);
+					if (isAlphanumeric(qr.message)) {
+						System.out.println("Alphanumeric message: " + qr.message);
+					} else {
+						System.out.println("Got bytes string len " + qr.message.length() + " corrected len " + qr.corrected.length);
+//						String message = getUUIDFromBytes(qr.corrected);
+						String message = getUUIDFromStr(qr.message);
+						System.out.println("Bytes message: " + message);
+					}
 
 					// Visualize its location in the image
 					VisualizeShapes.drawPolygon(qr.bounds,true,1,g2);
@@ -92,6 +100,31 @@ public class ExampleDetectQrCode extends JPanel {
 			}
 
 			repaint();
+		}
+	}
+
+	public static boolean isAlphanumeric(String str) {
+		for (int i=0; i<str.length(); i++) {
+			char c = str.charAt(i);
+			if (!Character.isDigit(c) && !Character.isLetter(c))
+				return false;
+		}
+		return true;
+	}
+
+	public static String getUUIDFromBytes(byte[] bytes) {
+		StringBuilder buffer = new StringBuilder();
+		for(int i=0; i<bytes.length; i++) {
+			buffer.append(String.format("%02x", bytes[i]));
+		}
+		return buffer.toString();
+	}
+
+	public static String getUUIDFromStr(String s) {
+		try {
+			return getUUIDFromBytes(s.getBytes(EciEncoding.ISO8859_1));
+		} catch (UnsupportedEncodingException e) {
+			return "";
 		}
 	}
 

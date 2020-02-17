@@ -3,11 +3,9 @@ package com.github.sorinescu.jpiqr;
 import boofcv.abst.fiducial.QrCodeDetector;
 import boofcv.alg.fiducial.qrcode.QrCode;
 import boofcv.factory.fiducial.FactoryFiducial;
-import boofcv.io.UtilIO;
 import boofcv.io.image.ConvertBufferedImage;
-import boofcv.io.image.UtilImageIO;
-import boofcv.struct.image.GrayU8;
 import boofcv.io.webcamcapture.UtilWebcamCapture;
+import boofcv.struct.image.GrayU8;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.ds.v4l4j.V4l4jDriver;
 
