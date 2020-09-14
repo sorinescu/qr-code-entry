@@ -1,0 +1,23 @@
+[Unit]
+Description=PiQR door access using EP2000 barcode module
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/root/piqr-ext-module/config.env
+ExecStart=/usr/bin/python3 /root/piqr-ext-module/piqr.py --key-api-url http://192.168.1.1:5000 --door-pin GPIO21
+
+Restart=always
+
+# If the application fails 3 times in 30 seconds, something has gone wrong,
+# and the state of the hardware can't be guaranteed. Reboot the system here.
+StartLimitBurst=3
+StartLimitIntervalSec=30
+StartLimitAction=reboot
+
+# StartLimitAction=reboot will reboot the box if the app fails repeatedly,
+# but if the app exits voluntarily, the reboot should trigger immediately
+#FailureAction=reboot
+
+[Install]
+WantedBy=multi-user.target
