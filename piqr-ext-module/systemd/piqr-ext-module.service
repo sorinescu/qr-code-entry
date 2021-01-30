@@ -5,7 +5,15 @@ After=network.target
 [Service]
 Type=simple
 EnvironmentFile=/root/piqr-ext-module/config.env
-ExecStart=/usr/bin/python3 /root/piqr-ext-module/piqr.py --key-api-url http://192.168.1.1:5000 --door-pin GPIO21
+
+# Raspberry Pi Rev. 1
+#ExecStart=/usr/bin/python3 /root/piqr-ext-module/piqr.py --key-api-url http://192.168.1.1:5000 --door-pin GPIO21
+# Raspberry Pi Rev. 2
+ExecStart=/usr/bin/python3 /root/piqr-ext-module/piqr.py --key-api-url http://192.168.1.1:5000 --door-pin GPIO27
+
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=PIQR
 
 Restart=always
 
@@ -13,7 +21,8 @@ Restart=always
 # and the state of the hardware can't be guaranteed. Reboot the system here.
 StartLimitBurst=3
 StartLimitIntervalSec=30
-StartLimitAction=reboot
+#StartLimitAction=reboot
+StartLimitAction=none
 
 # StartLimitAction=reboot will reboot the box if the app fails repeatedly,
 # but if the app exits voluntarily, the reboot should trigger immediately
